@@ -24,6 +24,79 @@ them.
 Neither file states how many entries it holds: a stated number is one
 more line to edit at every release.
 
+## v2026.11.16
+
+### `discover_accounts` keeps what it found where a purpose's xpubs end first
+
+It returns an `AccountDiscovery`: `accounts` is the dict it returned, and
+`cut_short` names those purposes (closes #859).
+
+### A `DescriptorWallet` refuses a WIF key expression by name
+
+Where it built a watch-only wallet for it (closes #894).
+
+### A `DescriptorWallet` refuses a branch label a ledger cannot write
+
+A label that is no int, negative or `2**63` or more, and two labels of one int
+(closes #902); `Ledger` decides a branch's and a source's type as the wallet
+does (closes #939).
+
+### `Ledger.fund` spends confirmed coins first, as Core's `send` does
+
+It tries Core's coin eligibility passes in order (closes #895).
+
+### A ledger bounds the blocks it holds
+
+The recent ones, each held transaction's, and the lowest of each span of 2016
+heights (closes #881).
+
+### `finalize` refuses a miniscript input that does not name a `pk_h()` key
+
+As Core's `finalizepsbt` leaves it unfinalized; a `multi()` count outside 1 to
+20 is refused before a key is read (closes #950).
+
+### A psbt's silent-payment ECDH share is parsed as a point when it is read
+
+(closes #979).
+
+### A backend's negative tip height is refused
+
+(closes #901).
+
+### A `FetchError` the caller's code built is refused by its class
+
+Its text is dropped; one built in C code that the package calls counts as the
+package's, as its docstring and SECURITY.md say (closes #935) (closes #971).
+
+### A refusal prints no caller's or server's value
+
+Nor a damaged ledger file's (closes #821) (closes #900); a refused int is
+described (closes #951); a failed copy or create keeps out a failed removal's
+path (closes #907); PyPy's own-int case is tested (closes #889).
+
+### Each connect attempt gets what is left of the deadline
+
+(closes #896).
+
+### `TcpPeerTransport` closes its connection when an exchange is interrupted
+
+(closes #891).
+
+### The tests fund, match and share what they need
+
+The session node's wallets are funded from a bank (closes #911); the electrs and
+floresta tests match the reworded wrong-chain refusal (#956); the scripted peer
+moves into a test package (issue btclib-org/.github#2275).
+
+### Shared files follow btclib-org/.github
+
+The first port batch, to btclib-org/.github@7369e8a (#949); every push to main
+starts the suite (#916).
+
+### The bestpractices.dev answers follow each criterion's text
+
+SECURITY.md names the fund class (#916) (#948) (#965) (#972) (#982).
+
 ## v2026.11.14.1
 
 ### A node's RPC error raises `RpcError` with bitcoin-core-rpc 2026.11.14

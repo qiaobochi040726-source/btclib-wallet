@@ -9,6 +9,89 @@ number says when a release was cut, and promises nothing about
 compatibility, so a breaking change is announced in this file — read it
 before upgrading, rather than a digit.
 
+## v2026.11.16
+
+`bip44.discover_accounts` returns an `AccountDiscovery` where it returned a
+dict, a `DescriptorWallet` refuses a WIF key expression, and several calls
+refuse what they accepted: a caller that relies on one of the answers below,
+or matches the text of a refusal, breaks. Against v2026.11.14.1, griffe
+reports no break in the public API; the return annotations `api_gaps.py`
+reports are in the first and the last bullets.
+
+- **`bip44.discover_accounts` returns an `AccountDiscovery`, where it
+  returned a dict**
+  ([ISS 859](https://github.com/btclib-org/btclib-wallet/issues/859)). Its
+  `accounts` is the dict it returned, and its `cut_short` names, in the
+  order read, the purposes whose xpubs ended before the account gap. Where
+  that happened it raised `BTClibValueError`, and so dropped every used
+  account it had found. Act on it: read `.accounts`.
+- **A `DescriptorWallet` refuses a WIF key expression, by name**
+  ([ISS 894](https://github.com/btclib-org/btclib-wallet/issues/894)),
+  where it built a watch-only wallet that could not sign for the key. No
+  earlier release refuses it: v2026.11.14.1 left this refusal out. Act on
+  it if you build a wallet from a descriptor holding a WIF.
+- **A `DescriptorWallet` refuses, when it is built, a branch label a ledger
+  cannot write**
+  ([ISS 902](https://github.com/btclib-org/btclib-wallet/issues/902)): a
+  label whose type is no int, or is bool, with `BTClibTypeError`; one that
+  is negative or `2**63` or more, and two labels holding one int, with
+  `BTClibValueError`. `Ledger.add_source` took such a label, and
+  `new_address` failed with a builtin error. `Ledger` decides a branch's and
+  a source's type the same way
+  ([ISS 939](https://github.com/btclib-org/btclib-wallet/issues/939)).
+- **`Ledger.fund` spends confirmed coins before unconfirmed change**
+  ([ISS 895](https://github.com/btclib-org/btclib-wallet/issues/895)),
+  trying the coin eligibility passes of Core's `send` in order, with Core's
+  default package limits. A coin past the last pass's limits is not spent,
+  and where only such coins could fund the payment, `fund` refuses.
+- **A ledger keeps the recent blocks, each held transaction's block, and
+  the lowest block of each span of 2016 heights**
+  ([ISS 881](https://github.com/btclib-org/btclib-wallet/issues/881)),
+  where it kept one more block per sync. After a reorganization deeper than
+  the recent blocks kept, `SyncResult.fork_height` is below the real fork,
+  and a backend that cannot read below its prune height fails that sync,
+  and each later one, with `FetchError`.
+- **`psbt.miniscript_solver`, and so `finalize`, refuses a miniscript input
+  whose `pk_h()` key the input names in neither `partial_sigs` nor
+  `hd_key_paths`**
+  ([ISS 950](https://github.com/btclib-org/btclib-wallet/issues/950)),
+  where `finalize` built a guess, as Core's `finalizepsbt` leaves such an
+  input unfinalized. Act on it: name the key in the psbt. A `multi()` count
+  outside 1 to 20 is refused before a key is read.
+- **A psbt whose silent-payment ECDH share is no curve point is refused
+  when it is read**
+  ([ISS 979](https://github.com/btclib-org/btclib-wallet/issues/979)),
+  naming the field and its entry, where `assert_as_valid` and `sign` raised
+  ecc's `EccValueError`.
+- **The fetchers refuse a negative tip height a backend answers**, with
+  `FetchError`
+  ([ISS 901](https://github.com/btclib-org/btclib-wallet/issues/901)), and
+  `get_block_count` of `BitcoinCoreFetcher` and `BitcoinCoreRestFetcher`
+  refuses a bool, a float or a string, which `int()` converted.
+- **A `FetchError` that a caller's object raises reaches the caller by its
+  class alone**
+  ([ISS 935](https://github.com/btclib-org/btclib-wallet/issues/935)): an
+  `RpcError` keeps its code and an `HttpError` its status, its text is
+  dropped, and nothing is chained. The objects are those a caller hands the
+  package, such as a client, a transport, a `Fetcher`, a reader or a
+  broadcaster. One built in C code that the package calls counts as the
+  package's, as `FetchError`'s docstring says
+  ([ISS 971](https://github.com/btclib-org/btclib-wallet/issues/971)). Act
+  on it if you read the text of such an error.
+- **Refusals print no caller's or server's value**
+  ([ISS 821](https://github.com/btclib-org/btclib-wallet/issues/821),
+  [ISS 900](https://github.com/btclib-org/btclib-wallet/issues/900),
+  [ISS 907](https://github.com/btclib-org/btclib-wallet/issues/907),
+  [ISS 951](https://github.com/btclib-org/btclib-wallet/issues/951)): a
+  refused int is described, as in `an int of 24 bits`; the wrong-chain
+  refusal names the chain the server serves; a damaged ledger file's values
+  are refused as this package's; a ledger copy that SQLite fails reads
+  `cannot copy the ledger file: <class>`. `fetcher.client_errors` and
+  `fetcher.fetch_errors` are annotated as returning
+  `AbstractContextManager[None]`, where they read `Iterator[None]`; each
+  still returns what a `@contextmanager` function returns. Act on it if you
+  match a refusal's text.
+
 ## v2026.11.14.1
 
 A patch on v2026.11.14 that changes the package by this fix alone.
